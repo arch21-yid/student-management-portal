@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management Dashboard</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --background: #f8fafc;
+            --text: #1e293b;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background-color: var(--background); color: var(--text); }
+        
+        /* LOGIN SCREEN STYLES */
+        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .login-card h2 { margin-bottom: 24px; color: #1e293b; }
+        .error-msg { color: var(--danger); font-size: 14px; margin-bottom: 15px; display: none; font-weight: 600; }
+
+        /* DASHBOARD STYLES */
+        .dashboard { display: none; }
+        .navbar { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 15px 30px; font-size: 20px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .btn-logout { background-color: rgba(255,255,255,0.2); width: auto; padding: 6px 12px; font-size: 14px; }
+        .btn-logout:hover { background-color: rgba(255,255,255,0.4); }
+        
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        h2 { margin-top: 0; margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; color: #334155; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #475569; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        button { padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px; font-weight: bold; }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: #94a3b8; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        th { background-color: #f8fafc; color: #64748b; font-weight: 600; }
+        .actions { display: flex; gap: 8px; }
+        .btn-edit { background-color: var(--success); padding: 6px 12px; font-size: 13px; width: auto; }
+        .btn-delete { background-color: var(--danger); padding: 6px 12px; font-size: 13px; width: auto; }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-container">
+    <div class="login-card">
+        <h2>System Login</h2>
+        <div id="loginError" class="error-msg">Invalid Username or Password!</div>
+        <form id="loginForm">
+            <div class="input-group" style="text-align: left;">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="admin" required>
+            </div>
+            <div class="input-group" style="text-align: left;">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit">Sign In</button>
+        </form>
+    </div>
+</div>
+
+<div id="dashboardScreen" class="dashboard">
+    <div class="navbar">
+        <span>🎓 Student Management Portal</span>
+        <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2 id="formTitle">Register New Student</h2>
+            <form id="studentForm">
+                <input type="hidden" id="studentId">
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="name" placeholder="John Doe" required minlength="2">
+                </div>
+                <div class="input-group">
+                    <label>Roll Number</label>
+                    <input type="text" id="roll" placeholder="IT-101" required>
+                </div>
+                <div class="input-group">
+                    <label>Department</label>
+                    <input type="text" id="department" placeholder="Information Technology" required>
+                </div>
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" placeholder="john@example.com" required>
+                </div>
+                <button type="submit" id="submitBtn">Submit Student</button>
+                <button type="button" id="cancelBtn" class="btn-secondary" style="display: none;" onclick="resetForm()">Cancel Edit</button>
+            </form>
+        </div>
+
+        <div class="card" style="overflow-x: auto;">
+            <h2>Active Student Records</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Roll</th>
+                        <th>Department</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+    <script>
+        const API_URL = 'http://localhost:8081/api/students';
+        let isEditMode = false;
+
+        // Login authentication check
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            // Simple admin credential rule
+            if (user === 'admin' && pass === 'admin123') {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboardScreen').style.display = 'block';
+                fetchStudents(); // Load data after a successful login
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        function handleLogout() {
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+
+        // Fetch Data
+        async function fetchStudents() {
+            try {
+                const response = await fetch(API_URL);
+                const students = await response.json();
+                const tableBody = document.getElementById('studentTableBody');
+                tableBody.innerHTML = ''; 
+                
+                students.forEach(student => {
+                    const row = `<tr>
+                        <td style="font-weight: 500;">${student.name}</td>
+                        <td><code>${student.roll}</code></td>
+                        <td>${student.department}</td>
+                        <td>${student.email}</td>
+                        <td class="actions">
+                            <button class="btn-edit" onclick="startEdit(${JSON.stringify(student).split('"').join('&quot;')})">Edit</button>
+                            <button class="btn-delete" onclick="deleteStudent(${student.id})">Delete</button>
+                        </td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Form Submit handler
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('studentId').value;
+            const studentData = {
+                name: document.getElementById('name').value,
+                roll: document.getElementById('roll').value,
+                department: document.getElementById('department').value,
+                email: document.getElementById('email').value
+            };
+
+            const url = isEditMode ? `${API_URL}/${id}` : API_URL;
+            const method = isEditMode ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(studentData)
+                });
+                if (response.ok) {
+                    resetForm();
+                    fetchStudents();
+                }
+            } catch (error) {
+                console.error('Error processing request:', error);
+            }
+        });
+
+        function startEdit(student) {
+            isEditMode = true;
+            document.getElementById('formTitle').innerText = "Edit Student Details";
+            document.getElementById('submitBtn').innerText = "Update Records";
+            document.getElementById('cancelBtn').style.display = "block";
+            
+            document.getElementById('studentId').value = student.id;
+            document.getElementById('name').value = student.name;
+            document.getElementById('roll').value = student.roll;
+            document.getElementById('department').value = student.department;
+            document.getElementById('email').value = student.email;
+        }
+
+        function resetForm() {
+            isEditMode = false;
+            document.getElementById('formTitle').innerText = "Register New Student";
+            document.getElementById('submitBtn').innerText = "Submit Student";
+            document.getElementById('cancelBtn').style.display = "none";
+            document.getElementById('studentForm').reset();
+            document.getElementById('studentId').value = '';
+        }
+
+        async function deleteStudent(id) {
+            if (confirm("Are you sure you want to delete this student record?")) {
+                try {
+                    const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    if (response.ok) { fetchStudents(); }
+                } catch (error) { console.error('Error deleting student:', error); }
+            }
+        }
+    </script>
+</body>
+</html>
